@@ -1,0 +1,16 @@
+--check which dbs are in snapshot isoation mode
+select name,is_read_committed_snapshot_on,snapshot_isolation_state, snapshot_isolation_state_desc,* from sys.databases
+--where is_read_committed_snapshot_on =1
+order by 1
+--Disable snapshot isolation
+alter database DBname set READ_COMMITTED_SNAPSHOT off with rollback after 30 seconds
+go
+use tempdb
+go
+dbcc shrinkfile (tempdev, 10000) --Shrink with 10GB
+go
+select (size*8)/1024.0 as FileSizeMB from sys.database_files --check new size
+go
+--Enable snapshot isolation
+alter database DBname set READ_COMMITTED_SNAPSHOT on with rollback after 30 seconds
+go

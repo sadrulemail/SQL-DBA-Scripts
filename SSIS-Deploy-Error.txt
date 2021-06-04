@@ -1,0 +1,19 @@
+https://stackoverflow.com/questions/34190385/ssdt-2012-ssis-deployment-error
+
+-- SSIS Deploy Issue
+
+Error Messaage 
+-----------------
+A .NET Framework error occurred during execution of user-defined routine or aggregate "deploy_project_internal": 
+System.ComponentModel.Win32Exception: A required privilege is not held by the client
+System.ComponentModel.Win32Exception: 
+   at Microsoft.SqlServer.IntegrationServices.Server.ISServerProcess.StartProcess(Boolean bSuspendThread)
+   at Microsoft.SqlServer.IntegrationServices.Server.ServerApi.DeployProjectInternal(SqlInt64 deployId, SqlInt64 versionId, SqlInt64 projectId, SqlString projectName)
+. (.Net SqlClient Data Provider)
+-----------------
+
+Solution:
+-----------
+https://www.oraylis.de/blog/fixing-sql-2012-ssis-deployment-error-6522-a-required-privilege-is-not-held-by-the-client
+
+please add the user "<MSSQL Service account>" to the GPO "Replace a process level token" to deploy the SSIS package on the server "<MSSQL Server PC>".

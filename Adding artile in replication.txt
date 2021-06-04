@@ -1,0 +1,40 @@
+https://www.sqlshack.com/how-to-add-drop-articles-from-existing-publications-in-sql-server/
+
+Strickly follow the steps sequence
+
+--allow_anonymous property of the publication to FALSE
+EXEC sp_changepublication
+@publication = N'Adventureworks2016-Pub',
+@property = N'allow_anonymous',
+@value = 'FALSE'
+GO
+-- disable Change immediate_sync
+EXEC sp_changepublication
+@publication = N'Adventureworks2016-Pub',
+@property = N'immediate_sync',
+@value = 'FALSE'
+GO
+
+-- adding artile(table) in publication
+
+EXEC sp_addarticle
+@publication = N'Adventureworks2016-Pub',
+@article =N'Cities',
+@source_object =N'Cities',
+@force_invalidate_snapshot=1
+
+-- refresh publication
+
+EXEC sp_refreshsubscriptions @publication = N'Adventureworks2016-Pub'
+
+-- again enable the immediate_sync,allow_anonymous
+
+EXEC sp_changepublication
+@publication = N'Adventureworks2016-Pub',
+@property = N'immediate_sync',
+@value = 'TRUE'
+ 
+EXEC sp_changepublication
+@publication = N'Adventureworks2016-Pub',
+@property = N'allow_anonymous',
+@value = 'TRUE'

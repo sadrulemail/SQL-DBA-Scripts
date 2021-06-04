@@ -1,0 +1,19 @@
+WITH BackupsSize AS(
+SELECT TOP 1000
+      rn = ROW_NUMBER() OVER (ORDER BY DATEPART(year,[backup_start_date]) ASC, DATEPART(month,[backup_start_date]) ASC)
+    , [Year]  = DATEPART(year,[backup_start_date])
+    , [Month] = DATEPART(month,[backup_start_date])
+    , [Backup Size GB] = CONVERT(DECIMAL(10,2),ROUND(AVG([backup_size]/1024/1024/1024),4))
+    , [Compressed Backup Size GB] = CONVERT(DECIMAL(10,2),ROUND(AVG([compressed_backup_size]/1024/1024/1024),4))
+FROM 
+    msdb.dbo.backupset
+WHERE 
+    [database_name] = N'XXXX'
+AND [type] = 'D'
+AND backup_start_date BETWEEN DATEADD(mm, - 13, GETDATE()) AND GETDATE()
+GROUP BY 
+    [database_name]
+    , DATEPART(yyyy,[backup_start_date])
+    , DATEPART(mm, [backup_start_date])
+ORDER BY [Year],[Month]) 
+--SECTION 1 END

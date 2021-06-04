@@ -1,0 +1,112 @@
+https://stackoverflow.com/questions/26684278/ssrs-2012-report-builder-fails-to-run-from-remote-host-401-unauthorized
+SSRS 2012 Report Builder fails to run from remote host - 401 Unauthorized
+
+
+I found the solution. The first step is to enable Basic Authentication using this instruction: http://msdn.microsoft.com/en-us/library/8faf2938-b71b-4e61-a172-46da2209ff55%28v=sql.110%29
+
+But I omitted step 4.
+
+Next I used this instruction: https://support.microsoft.com/kb/955809?wa=wsignin1.0 and performed Method 3 - Create an explicit Web.config file
+
+The web.config file need to be saved at this location: C:\Program Files\Microsoft SQL Server\MSRS11.ATC\Reporting Services\ReportServer\ReportBuilder
+
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <system.web>
+    <compilation tempDirectory="C:\Program Files\Microsoft SQL Server\MSRS11.ATC\Reporting Services\RSTempFiles\"/>
+  </system.web>
+</configuration>
+
+
+
+
+----------------
+To configure a report server to use Basic authentication
+Open RSReportServer.config in a text editor.
+
+The file is located at <drive>:\Program Files\Microsoft SQL Server\MSRS11.MSSQLSERVER\Reporting Services\ReportServer.
+
+Find <Authentication>.
+
+Copy one of the following XML structures that best fits your needs. The first XML structure provides placeholders for specifying all of the elements, which are described in the next section:
+
+
+Copy
+<Authentication>
+      <AuthenticationTypes>
+             <RSWindowsBasic>
+                   <LogonMethod>3</LogonMethod>
+                   <Realm></Realm>
+                   <DefaultDomain></DefaultDomain>
+             </RSWindowsBasic>
+      </AuthenticationTypes>
+      <EnableAuthPersistence>true</EnableAuthPersistence>
+</Authentication>
+If you are using default values, you can copy the minimum element structure:
+
+
+Copy
+      <AuthenticationTypes>
+             <RSWindowsBasic/>
+      </AuthenticationTypes>
+Paste it over the existing entries for <Authentication>.
+
+If you are using multiple authentication types, add just the RSWindowsBasic element but do not delete the entries for RSWindowsNegotiate, RSWindowsNTLM, or RSWindowsKerberos.
+
+To support the Safari browser, you cannot configure the report server to use multiple authentication types. You must specify only RSWindowsBasic and delete the other entries.
+
+Note that you cannot use Custom with other authentication types.
+
+Replace empty values for <Realm> or <DefaultDomain> with values that are valid for your environment.
+
+Save the file.
+
+If you configured a scale-out deployment, repeat these steps for other report servers in the deployment.
+
+Restart the report server to clear any sessions that are currently open.
+
+--------------------------------
+To configure Report Builder access on a report server configured for Basic authentication
+Verify the report server is configured for Basic authentication by checking the authentication settings in the RSReportServer.config file.
+
+Create a BIN folder under the ReportBuilder folder. By default, this folder is located at \Program Files\Microsoft SQL Server\MSRS11.MSSQLSERVER\Reporting Services\ReportServer\ReportBuilder.
+
+Copy the following assemblies from the ReportServer\Bin folder to the ReportBuilder\BIN folder:
+
+Microsoft.ReportingServices.Diagnostics.dll
+
+Microsoft.ReportingServices.Interfaces.dll
+
+ReportingServicesAppDomainManager.dll
+
+RSHttpRuntime.dll
+
+Optionally, create a Web.config file to process Report Builder requests under an Anonymous account:
+
+
+Copy
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+<system.web>
+<authentication mode="Windows" />  
+<identity impersonate="true " userName="username" password="password"/>
+</system.web>
+</configuration>
+Authentication mode must be set to Windows if you include a Web.config file.
+
+Identity impersonate can be True or False.
+
+Set it to False if you do not want ASP.NET to read the security token. The request will run in the security context of the Report Server service.
+
+Set it to True if you want ASP.NET to read the security token from the host layer. If you set it to True, you must also specify userName and password to designate an Anonymous account. The credentials you specify will determine the security context under which the request is issued.
+
+Save the Web.config file to the ReportBuilder\bin folder.
+
+Open RSReportServer.config file, in the Services section, find IsReportManagerEnabled and add the following setting below it:
+
+
+Copy
+<IsReportBuilderAnonymousAccessEnabled>True</IsReportBuilderAnonymousAccessEnabled>
+Save RSReportServer.config and close the file.
+
+Restart the report server.

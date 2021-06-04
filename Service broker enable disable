@@ -1,0 +1,14 @@
+USE [master]
+GO
+SELECT   [name]
+ ,[is_broker_enabled] 
+ ,[service_broker_guid]
+FROM [sys].[databases]
+order by  [service_broker_guid]
+GO
+ALTER DATABASE [DBName] SET DISABLE_BROKER with no_wait;
+
+ALTER DATABASE [DBName] SET ENABLE_BROKER with no_wait;
+
+-- if [service_broker_guid] already exists
+ALTER DATABASE [DBName] SET NEW_BROKER with no_wait;

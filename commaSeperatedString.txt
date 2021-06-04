@@ -1,0 +1,8 @@
+use DBACentral
+go
+DECLARE @listStr VARCHAR(MAX)
+select @listStr = COALESCE(@listStr+'","' ,'') + ltrim(rtrim(HostName)) from wcg_host where isactive=1 and 
+(ltrim(rtrim(hostname)) not like '%.wcgclinical.com' 
+and ltrim(rtrim(hostname)) not like '%.medavante.net')
+
+SELECT @listStr
