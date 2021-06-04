@@ -1,0 +1,21 @@
+
+Error Message
+
+This could be due to CredSSP encryption oracle remedation.
+
+
+Solution
+
+change GPO ...
+
+Encryption Oracle Remediation
+Enabled
+Protection Level: Vulnerable
+
+Then do the "gpupdate /force" also try with admin access
+
+
+Another Solution
+
+run below from CMD with admin access .. 
+reg add "HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System\CredSSP\Parameters" /f /v AllowEncryptionOracle /t REG_DWORD /d 2

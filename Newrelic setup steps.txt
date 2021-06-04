@@ -1,0 +1,44 @@
+Below steps to follow to setup and configuration NewRelic to monitor MSSQL Server health/performance
+ 
+•         Setup and configure NewRelic Infrastructure Agent
+•         SQL Login creation and access
+•         Setup MSSQL third party Infrastructure plugin and configure.
+•         Where to check data?
+ 
+Setup and configure NewRelic Infrastructure Agent
+1.       Direct Download the Newrelic infrastructure agent(https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.msi) or follow the setup doc(https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/get-started/install-infrastructure-agent) (powershell command base)
+2.       Simply install it. It will setup a service named “New Relic Infrastructure Agent” and will be found in Control panel program section to uninstall.
+3.       Now put the license key (get it from account settings page) in the config file -> C:\Program Files\New Relic\newrelic-infra\newrelic-infra.yml
+		a.       license_key: 650ca39f097ef006f24dda65f1ed6d0e4f47NRAL
+4.       Now start the service named “New Relic Infrastructure Agent”. It will take 2/3 minutes to show in the newrelic site.
+5.       You may check the log if failed/required -> C:\ProgramData\New Relic\newrelic-infra\
+ 
+SQL Login creation and access
+1.       Create a SQL login for the plugin to connect
+2.       As example, name it “newrelic”
+3.       Grant access 
+a.       Server level : “Connect” & ” VIEW SERVER STATE”
+b.      DB level : “Connect” only to master database
+ 
+Setup MSSQL third party Infrastructure plugin and configure.
+1.       “NewRelic Infrastructure Agent” must be available and running to configure MSSQL plugin
+2.       You may follow the below steps or the document available in newrelic BUT this doc is not working for the latest version
+3.       Direct Download the MSI -> 64bit(http://download.newrelic.com/infrastructure_agent/windows/integrations/nri-mssql/nri-mssql-amd64.msi) OR 32bit
+4.       Simply install it.
+5.       Open the file “mssql-config.yml.sample” and save it as “mssql-config.yml” in the same location “C:\Program Files\New Relic\newrelic-infra\integrations.d\” (default location for the plugin config file)
+6.       Now update the parameters in “mssql-config.yml” (example file attached)
+a.       hostname: server name where MSSQL instance has been installed i.e. DCA-T-APP02
+b.      username: SQL Login to connect ie newrelic
+c.       psssword: SQL Login Password
+d.      instance: the instance/service name (select @@SERVICENAME) i.e. default is MSSQLSERVER
+e.      disable the port parameter if “MSSQL Browser service” service is running
+f.        env: production (as per your environment i.e. UAT/QA/PROD etc. )
+g.       role: mssql
+h.      disable all other parameters if not required
+7.       now restart the “New Relic Infrastructure Agent” service. It will take 2/3 minutes to show in the newrelic site.
+8.       You may check the log if failed/required -> C:\ProgramData\New Relic\newrelic-infra\
+ 
+Where to check data?
+1.       Server/VM level data: menu -> “Entity explorer” -> “Hosts”
+2.       MSSQL Data: Menu -> “Infrastructure” -> “Thied-party services” -> “MSSQL”
+a.       Use filter if you configure multiple instances for same license number/account
