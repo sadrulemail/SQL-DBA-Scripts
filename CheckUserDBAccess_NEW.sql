@@ -32,6 +32,7 @@ IF OBJECT_ID('tempdb.dbo.#Login_Access') is not null
 	Create table  #Login_Access (AccessLevel nvarchar(1000),
 	[Login/DBUserName]			nvarchar(1000),
 	[Role/Access]          nvarchar(1000),
+	[Object]         nvarchar(1000),
 	[Command]  nvarchar(MAX))
 
 declare Login_C cursor for
@@ -208,10 +209,10 @@ BEGIN
 	--a.OrderBy1,a.Orderby2,
 	INSERT INTO #Login_Access
 	select * 
-	from (select top 10000 a.AccessLevel,a.[Login/DBUserName],a.[Role/Access],a.Command 
+	from (select top 10000 a.AccessLevel,a.[Login/DBUserName],a.[Role/Access],[Object],a.Command 
 	from(
 	select 0 OrderBy1, case when sp.permission_name collate SQL_Latin1_General_CP1_CI_AS='CONNECT SQL' then 0 else 2 end Orderby2, 
-	'Server' AccessLevel, pr.name as "Login/DBUserName", sp.permission_name collate SQL_Latin1_General_CP1_CI_AS as [Role/Access]
+	'Server' AccessLevel, pr.name as "Login/DBUserName", sp.permission_name collate SQL_Latin1_General_CP1_CI_AS as [Role/Access],'' [Object]
 	, case when sp.permission_name collate SQL_Latin1_General_CP1_CI_AS = 'CONNECT SQL' 
 			then 'CREATE LOGIN '+ QUOTENAME(pr.name) +' '+
 			case when pr.type_desc like 'WINDOWS%' then ' FROM WINDOWS WITH ' 
@@ -231,7 +232,7 @@ BEGIN
 	--and sp.permission_name not in ('CONNECT SQL')
 	and pr.name = @login
 	Union All
-	select 0 OrderBy1, 3 Orderby2, 'Server' AccessLevel, prm.name as "Login/DBUserName", prr.name as [Role/Access]
+	select 0 OrderBy1, 3 Orderby2, 'Server' AccessLevel, prm.name as "Login/DBUserName", prr.name as [Role/Access],'' [Object]
 	, 'exec sp_addsrvrolemember '''+prm.name+''','''+prr.name+'''' as GrantCMD
 	--, 'exec sp_dropsrvrolemember '''+prm.name+''','''+prr.name+'''' as DenyCMD
 	from sys.server_role_members srm
@@ -239,12 +240,12 @@ BEGIN
 	left join sys.server_principals AS prr on prr.principal_id = srm.role_principal_id
 	where prm.name = @login
 	union all
-	select 0 OrderBy1, 1 Orderby2,'Server' AccessLevel, sp.name as "LoginName", 'DISABLED' [ROle/Access], 'ALTER LOGIN '+QUOTENAME(sp.name)+' DISABLE;' command
+	select 0 OrderBy1, 1 Orderby2,'Server' AccessLevel, sp.name as "LoginName", 'DISABLED' [ROle/Access],'' [Object], 'ALTER LOGIN '+QUOTENAME(sp.name)+' DISABLE;' command
 	from sys.server_principals sp
 	where sp.name = @login
 	and sp.is_disabled = 1
 	Union All
-	select distinct 2 OrderBy1, case when t.permissionType = 'CONNECT' then 0 when t.Role is null then 1 else 2 end Orderby2, DATABASE_NAME,case when t.LoginName <> DatabaseUserName then t.LoginName+'/'+DatabaseUserName else DatabaseUserName END ,isnull(Role,PermissionType) [Role/Access],
+	select distinct 2 OrderBy1, case when t.permissionType = 'CONNECT' then 0 when t.Role is null then 1 else 2 end Orderby2, DATABASE_NAME,case when t.LoginName <> DatabaseUserName then t.LoginName+'/'+DatabaseUserName else DatabaseUserName END ,isnull(Role,PermissionType) [Role/Access], t.ObjectName [Object],
 	'USE '+QUOTENAME(t.database_name) +'; '+
 	case when t.Role is null then 
 		case when (@CreateUserScript=1 and t.permissionType = 'CONNECT') then 'CREATE USER '+QUOTENAME( CASE WHEN @UseLoginInsteadOfUserInCommand = 1 THEN ISNULL(t.LoginName,t.DatabaseUserName) ELSE ISNULL(t.DatabaseUserName,t.LoginName)  END)+' FROM LOGIN '+QUOTENAME(isnull(@login,ISNULL(t.LoginName,t.DatabaseUserName)))+'; ' else '' end

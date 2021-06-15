@@ -24,8 +24,7 @@ exec sp_msforeachdb
         type_desc,
         size/128.0 AS CurrentSizeMB,  
         size/128.0 - CAST(FILEPROPERTY(name, ''SpaceUsed'') AS INT)/128.0 AS FreeSpaceMB
-FROM sys.database_files
-where physical_name like ''\\PRD-NETAPP-SMB3\dce_d_sql01_userdb\%'';';
+FROM sys.database_files;';
     
 SELECT * 
 FROM #FileSize order by FreeSpaceMB desc
