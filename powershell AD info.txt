@@ -1,0 +1,46 @@
+#find all group name
+get-adgroup -filter * |select name
+#find group name which start with WCG_ITS
+get-adgroup -filter {Name -like 'WCG_ITS*'} |select name
+#Find the group member of from group name
+#MEDAVANTE\MA-DBA-RWX-SG
+Get-AdGroupMember -identity WCG_ITS_DBAs_DEV | select name, SamAccountName
+
+#install AD feature
+get-windowsfeature | where name -like RSAT-AD-PowerShell | Install-WindowsFeature
+
+#find all computer name from domain
+Get-ADComputer -Filter * -properties *|select Name, DNSHostName, OperatingSystem, LastLogonDate
+
+Get-ADComputer -Filter {Name -like '*SQL*' -or  Name -like '*DB*' } -SearchBase "CN=Computers,DC=AAAA, DC=Local" | select Name, DNSHostName | format-table
+
+
+$ServiceName = 'ClusSvc'
+$arrService = Get-Service -Name $ServiceName -ComputerName DB02VDCA
+$arrService.Status
+$arrService.Name
+$arrService.DisplayName
+
+#get-service "servicename*" | Where {$_.Status -eq 'Stopped'} | start-service
+
+# start the following Windows services in the specified order:
+[Array] $Services = 'Service1','Service2','Service3','Service4','Service5';
+
+# loop through each service, if its not running, start it
+foreach($ServiceName in $Services)
+{
+    $arrService = Get-Service -Name $ServiceName
+    write-host $ServiceName
+    while ($arrService.Status -ne 'Running')
+    {
+        Start-Service $ServiceName
+        write-host $arrService.status
+        write-host 'Service starting'
+        Start-Sleep -seconds 60
+        $arrService.Refresh()
+        if ($arrService.Status -eq 'Running')
+        {
+          Write-Host 'Service is now Running'
+        }
+    }
+}
